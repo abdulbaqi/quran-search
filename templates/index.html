@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>App Portal</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      text-align: center;
+      padding: 3.5rem 1rem 2rem;
+    }
+
+    header h1 {
+      font-size: 2.8rem;
+      color: #d4af37;
+      letter-spacing: 3px;
+      text-shadow: 0 0 30px rgba(212,175,55,0.35);
+    }
+
+    header p {
+      margin-top: 0.5rem;
+      color: #7a9bb5;
+      font-size: 1rem;
+      letter-spacing: 1px;
+    }
+
+    .divider {
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(to right, transparent, #d4af37, transparent);
+      margin: 1.5rem auto 0;
+    }
+
+    main {
+      flex: 1;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+
+    .section-title {
+      font-size: 0.75rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #7a9bb5;
+      margin-bottom: 1.5rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .app-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 2rem 1.8rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      transition: transform 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .app-card:hover {
+      transform: translateY(-4px);
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(212,175,55,0.4);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(212,175,55,0.15);
+    }
+
+    .app-card .icon {
+      font-size: 2.4rem;
+      line-height: 1;
+    }
+
+    .app-card .app-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #f0f0f0;
+    }
+
+    .app-card .app-desc {
+      font-size: 0.88rem;
+      color: #7a9bb5;
+      line-height: 1.6;
+    }
+
+    .app-card .tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: rgba(212,175,55,0.15);
+      color: #d4af37;
+      border-radius: 4px;
+      padding: 0.2rem 0.55rem;
+      margin-top: auto;
+      width: fit-content;
+    }
+
+    .app-card.coming-soon {
+      opacity: 0.45;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .app-card.coming-soon .tag {
+      background: rgba(255,255,255,0.08);
+      color: #7a9bb5;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: #3a5068;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>App Portal</h1>
+    <p>Select an application to get started</p>
+    <div class="divider"></div>
+  </header>
+
+  <main>
+    <div class="section-title">Available Apps</div>
+    <div class="grid">
+
+      <a class="app-card" href="/quran">
+        <div class="icon">&#x1F4D6;</div>
+        <div class="app-name">Quran Search</div>
+        <div class="app-desc">
+          Search the full Quran text for any Arabic word and see every verse it appears in,
+          with occurrence counts and diacritic-aware highlighting.
+        </div>
+        <div class="tag">Islamic Studies</div>
+      </a>
+
+      <div class="app-card coming-soon">
+        <div class="icon">&#x1F4CA;</div>
+        <div class="app-name">Coming Soon</div>
+        <div class="app-desc">
+          More applications will be added here. Check back later.
+        </div>
+        <div class="tag">Coming Soon</div>
+      </div>
+
+      <div class="app-card coming-soon">
+        <div class="icon">&#x1F527;</div>
+        <div class="app-name">Coming Soon</div>
+        <div class="app-desc">
+          More applications will be added here. Check back later.
+        </div>
+        <div class="tag">Coming Soon</div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>App Portal &mdash; Built with Flask</footer>
+
+</body>
+</html>

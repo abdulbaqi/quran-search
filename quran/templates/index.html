@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quran Search</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #e0e0e0;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    header h1 {
+      font-size: 2.6rem;
+      color: #d4af37;
+      letter-spacing: 2px;
+      text-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+    }
+
+    header p {
+      margin-top: 0.4rem;
+      color: #9ab;
+      font-size: 0.95rem;
+      direction: ltr;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 0.6rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.5rem;
+      align-items: center;
+    }
+
+    .search-box input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 1.4rem;
+      color: #fff;
+      direction: rtl;
+      font-family: inherit;
+    }
+
+    .search-box input::placeholder { color: #556; }
+
+    .search-box button {
+      background: #d4af37;
+      color: #1a1a2e;
+      border: none;
+      border-radius: 8px;
+      padding: 0.55rem 1.4rem;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      direction: ltr;
+      white-space: nowrap;
+    }
+
+    .search-box button:hover { background: #e8c84a; }
+    .search-box button:active { transform: scale(0.97); }
+
+    .stats {
+      display: none;
+      background: rgba(212,175,55,0.1);
+      border: 1px solid rgba(212,175,55,0.25);
+      border-radius: 10px;
+      padding: 0.8rem 1.2rem;
+      margin-bottom: 1.2rem;
+      direction: ltr;
+      text-align: center;
+      font-size: 0.95rem;
+      color: #d4af37;
+    }
+
+    .stats span { font-weight: 700; font-size: 1.1rem; }
+
+    .results { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .verse-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-right: 3px solid #d4af37;
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      transition: background 0.2s;
+    }
+
+    .verse-card:hover { background: rgba(255,255,255,0.09); }
+
+    .verse-ref {
+      font-size: 0.78rem;
+      color: #d4af37;
+      direction: ltr;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .verse-text {
+      font-size: 1.35rem;
+      line-height: 2.1;
+      color: #f0f0f0;
+      direction: rtl;
+    }
+
+    .verse-text mark {
+      background: rgba(212,175,55,0.35);
+      color: #ffe680;
+      border-radius: 3px;
+      padding: 0 2px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #556;
+      direction: ltr;
+      display: none;
+    }
+
+    .empty-state .icon { font-size: 3rem; margin-bottom: 0.5rem; }
+
+    .spinner {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+      direction: ltr;
+      color: #9ab;
+    }
+
+    .spinner::after {
+      content: '';
+      display: inline-block;
+      width: 28px; height: 28px;
+      border: 3px solid rgba(212,175,55,0.2);
+      border-top-color: #d4af37;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      display: none;
+      background: rgba(220,50,50,0.12);
+      border: 1px solid rgba(220,50,50,0.3);
+      border-radius: 8px;
+      padding: 0.8rem 1.2rem;
+      color: #f88;
+      direction: ltr;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>&#x202B;البحث في القرآن الكريم&#x202C;</h1>
+      <p>Quran Word Search &mdash; Tanzil Simple Text</p>
+    </header>
+
+    <div class="search-box">
+      <input id="searchInput" type="text" placeholder="أدخل كلمة للبحث..." autocomplete="off" />
+      <button onclick="doSearch()">Search</button>
+    </div>
+
+    <div class="stats" id="stats">
+      Found <span id="statTotal">0</span> occurrence(s) of
+      &ldquo;<span id="statWord"></span>&rdquo; across
+      <span id="statVerses">0</span> verse(s)
+    </div>
+
+    <div class="error-msg" id="errorMsg">Something went wrong. Please try again.</div>
+    <div class="spinner" id="spinner">Searching&hellip;</div>
+    <div class="empty-state" id="emptyState">
+      <div class="icon">&#x1F50D;</div>
+      <div>No verses found for this word.</div>
+    </div>
+
+    <div class="results" id="results"></div>
+  </div>
+
+  <script>
+    const input = document.getElementById('searchInput');
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+    // Arabic diacritics (tashkeel) range — allowed between base letters
+    const DIACRITICS = '[ؐ-ًؚ-ٰٟ]*';
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function escapeRegex(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // Build a regex that matches the bare word even when diacritics appear
+    // between its letters in the display text.
+    function buildDiacriticRegex(word) {
+      return new RegExp(
+        word.split('').map(escapeRegex).join(DIACRITICS) + DIACRITICS,
+        'g'
+      );
+    }
+
+    function highlight(text, word) {
+      if (!word) return escapeHtml(text);
+      const regex = buildDiacriticRegex(word);
+      // Walk through the original text, escape HTML per segment, wrap matches
+      let result = '';
+      let last = 0;
+      let m;
+      while ((m = regex.exec(text)) !== null) {
+        result += escapeHtml(text.slice(last, m.index));
+        result += `<mark>${escapeHtml(m[0])}</mark>`;
+        last = m.index + m[0].length;
+      }
+      result += escapeHtml(text.slice(last));
+      return result;
+    }
+
+    async function doSearch() {
+      const word = input.value.trim();
+      if (!word) return;
+
+      document.getElementById('stats').style.display = 'none';
+      document.getElementById('errorMsg').style.display = 'none';
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('results').innerHTML = '';
+      document.getElementById('spinner').style.display = 'block';
+
+      try {
+        const res = await fetch(`/search?word=${encodeURIComponent(word)}`);
+        if (!res.ok) throw new Error('Network error');
+        const data = await res.json();
+
+        document.getElementById('spinner').style.display = 'none';
+
+        if (data.total === 0) {
+          document.getElementById('emptyState').style.display = 'block';
+          return;
+        }
+
+        document.getElementById('statWord').textContent = data.word;
+        document.getElementById('statTotal').textContent = data.total.toLocaleString();
+        document.getElementById('statVerses').textContent = data.verse_count.toLocaleString();
+        document.getElementById('stats').style.display = 'block';
+
+        const container = document.getElementById('results');
+        for (const v of data.results) {
+          const card = document.createElement('div');
+          card.className = 'verse-card';
+          card.innerHTML = `
+            <div class="verse-ref">Surah ${v.surah} : Ayah ${v.ayah}${v.count > 1 ? ` &nbsp;&bull;&nbsp; ${v.count}x` : ''}</div>
+            <div class="verse-text">${highlight(v.text, word)}</div>
+          `;
+          container.appendChild(card);
+        }
+      } catch (err) {
+        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('errorMsg').style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
