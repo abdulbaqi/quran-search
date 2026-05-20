@@ -106,16 +106,45 @@
       transition: background 0.2s;
     }
 
+    .verse-card.meccan  { border-right-color: #e8873a; }
+    .verse-card.medinan { border-right-color: #4caf8f; }
+
     .verse-card:hover { background: rgba(255,255,255,0.09); }
 
     .verse-ref {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
       font-size: 0.78rem;
-      color: #d4af37;
       direction: ltr;
       margin-bottom: 0.5rem;
       font-weight: 600;
       letter-spacing: 0.5px;
     }
+
+    .verse-ref .ref-loc  { color: #d4af37; }
+
+    .verse-ref .surah-name {
+      color: #c8c8c8;
+      font-weight: 500;
+    }
+
+    .verse-ref .surah-name-ar {
+      font-size: 0.9rem;
+      color: #c8c8c8;
+    }
+
+    .place-badge {
+      font-size: 0.65rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      border-radius: 4px;
+      padding: 0.15rem 0.45rem;
+      margin-right: auto;
+    }
+
+    .place-badge.meccan  { background: rgba(232,135,58,0.18);  color: #e8873a; }
+    .place-badge.medinan { background: rgba(76,175,143,0.18); color: #4caf8f; }
 
     .verse-text {
       font-size: 1.35rem;
@@ -317,10 +346,16 @@
 
         const container = document.getElementById('results');
         for (const v of data.results) {
+          const placeClass = v.place ? v.place.toLowerCase() : '';
           const card = document.createElement('div');
-          card.className = 'verse-card';
+          card.className = `verse-card ${placeClass}`;
           card.innerHTML = `
-            <div class="verse-ref">Surah ${v.surah} : Ayah ${v.ayah}${v.count > 1 ? ` &nbsp;&bull;&nbsp; ${v.count}x` : ''}</div>
+            <div class="verse-ref">
+              <span class="ref-loc">Surah ${v.surah} : Ayah ${v.ayah}${v.count > 1 ? ` &nbsp;&bull;&nbsp; ${v.count}x` : ''}</span>
+              <span class="surah-name">${v.surah_name}</span>
+              <span class="surah-name-ar">${v.surah_name_arabic}</span>
+              ${v.place ? `<span class="place-badge ${placeClass}">${v.place}</span>` : ''}
+            </div>
             <div class="verse-text">${highlight(v.text, word)}</div>
           `;
           container.appendChild(card);

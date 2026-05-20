@@ -30,12 +30,16 @@ def _parse(path: Path) -> dict[tuple[int, int], str]:
     return verses
 
 
-def _load_toc(path: Path) -> dict[int, str]:
-    """Return {surah_number: 'Meccan'|'Medinan'}."""
+def _load_toc(path: Path) -> dict[int, dict]:
+    """Return {surah_number: {name, name_arabic, place}}."""
     toc = {}
     with open(path, encoding="utf-8") as f:
         for row in csv.DictReader(f):
-            toc[int(row["No."])] = row["Place"]
+            toc[int(row["No."])] = {
+                "name": row["Name"],
+                "name_arabic": row["Name Arabic"],
+                "place": row["Place"],
+            }
     return toc
 
 
@@ -51,7 +55,8 @@ def _search(word: str, place: str = "") -> dict:
     place = place.strip().capitalize()  # "Meccan" | "Medinan" | ""
     total, results = 0, []
     for (surah, ayah), clean_text in _clean.items():
-        if place and _toc.get(surah) != place:
+        meta = _toc.get(surah, {})
+        if place and meta.get("place") != place:
             continue
         count = clean_text.count(word)
         if count:
@@ -59,6 +64,9 @@ def _search(word: str, place: str = "") -> dict:
             results.append({
                 "surah": surah,
                 "ayah": ayah,
+                "surah_name": meta.get("name", ""),
+                "surah_name_arabic": meta.get("name_arabic", ""),
+                "place": meta.get("place", ""),
                 "text": _display.get((surah, ayah), clean_text),
                 "count": count,
             })
