@@ -82,6 +82,8 @@ def _search(word: str, place: str = "") -> dict:
                 "place": meta.get("place", ""),
                 "left": left_ctx,
                 "right": right_ctx,
+                "left_word": left_word,
+                "right_word": right_word,
                 "text": _display.get((surah, ayah), clean_text),
             })
 

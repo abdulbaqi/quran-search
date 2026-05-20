@@ -135,11 +135,22 @@
       padding: 0.3rem 0;
       border-bottom: 1px solid rgba(255,255,255,0.05);
       direction: rtl;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.15s;
     }
 
+    .freq-row:hover { background: rgba(255,255,255,0.06); }
+    .freq-row.active { background: rgba(212,175,55,0.12); }
     .freq-row:last-child { border-bottom: none; }
 
-    .freq-word { font-size: 1.05rem; color: #f0f0f0; }
+    .freq-word {
+      font-size: 1.05rem;
+      color: #f0f0f0;
+      text-decoration: underline dotted rgba(212,175,55,0.5);
+    }
+
+    .freq-row.active .freq-word { color: #ffe680; }
 
     .freq-count {
       font-size: 0.75rem;
@@ -147,6 +158,33 @@
       font-weight: 700;
       direction: ltr;
     }
+
+    .filter-active-bar {
+      display: none;
+      background: rgba(212,175,55,0.1);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      margin-bottom: 1rem;
+      direction: ltr;
+      font-size: 0.85rem;
+      color: #d4af37;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .filter-active-bar button {
+      background: none;
+      border: 1px solid rgba(212,175,55,0.4);
+      color: #d4af37;
+      border-radius: 4px;
+      padding: 0.2rem 0.6rem;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .filter-active-bar button:hover { background: rgba(212,175,55,0.15); }
 
     /* KWIC concordance */
     .kwic-table {
@@ -283,6 +321,11 @@
     <div class="error-msg" id="errorMsg">Something went wrong. Please try again.</div>
     <div class="spinner" id="spinner">Searching&hellip;</div>
 
+    <div class="filter-active-bar" id="filterActiveBar">
+      <span>Showing concordance for neighbour: <strong id="filterActiveWord"></strong></span>
+      <button onclick="clearNeighbourFilter()">&#x2715; Clear filter</button>
+    </div>
+
     <div class="freq-grid" id="freqGrid">
       <div class="freq-box">
         <h3>&#8592; Left Neighbours (word before)</h3>
@@ -316,9 +359,73 @@
     const input = document.getElementById('searchInput');
     input.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 
+    let allResults = [];
+    let currentWord = '';
+    let activeNeighbour = null;  // { word, side } or null
+
     function escapeHtml(str) {
       if (!str) return '<span style="color:#334">—</span>';
       return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function renderKwic(results) {
+      const tbody = document.getElementById('kwicBody');
+      tbody.innerHTML = '';
+      for (const v of results) {
+        const placeClass = v.place ? v.place.toLowerCase() : '';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="col-left">${escapeHtml(v.left)}</td>
+          <td class="col-word">${escapeHtml(currentWord)}</td>
+          <td class="col-right">${escapeHtml(v.right)}</td>
+          <td class="col-ref">
+            <span class="ref-loc">${v.surah}:${v.ayah}</span>
+            <span class="ref-name">${v.surah_name} &nbsp; ${v.surah_name_arabic}</span>
+            ${v.place ? `<span class="place-badge ${placeClass}">${v.place}</span>` : ''}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+      document.getElementById('kwicTable').style.display = results.length ? 'table' : 'none';
+    }
+
+    function applyNeighbourFilter(neighbourWord, side, clickedEl) {
+      // Toggle off if clicking the active one
+      if (activeNeighbour && activeNeighbour.word === neighbourWord && activeNeighbour.side === side) {
+        clearNeighbourFilter();
+        return;
+      }
+
+      // Deactivate previous
+      document.querySelectorAll('.freq-row.active').forEach(el => el.classList.remove('active'));
+      clickedEl.classList.add('active');
+
+      activeNeighbour = { word: neighbourWord, side };
+
+      const filtered = allResults.filter(v =>
+        side === 'left' ? v.left_word === neighbourWord : v.right_word === neighbourWord
+      );
+
+      document.getElementById('filterActiveWord').textContent = neighbourWord;
+      document.getElementById('filterActiveBar').style.display = 'flex';
+      renderKwic(filtered);
+    }
+
+    function clearNeighbourFilter() {
+      activeNeighbour = null;
+      document.querySelectorAll('.freq-row.active').forEach(el => el.classList.remove('active'));
+      document.getElementById('filterActiveBar').style.display = 'none';
+      renderKwic(allResults);
+    }
+
+    function buildFreqRows(freqData, side) {
+      return freqData.map(([w, c]) => {
+        const div = document.createElement('div');
+        div.className = 'freq-row';
+        div.innerHTML = `<span class="freq-word">${escapeHtml(w)}</span><span class="freq-count">${c}x</span>`;
+        div.addEventListener('click', () => applyNeighbourFilter(w, side, div));
+        return div;
+      });
     }
 
     async function doSearch() {
@@ -326,12 +433,14 @@
       if (!word) return;
 
       const place = document.querySelector('input[name="place"]:checked').value;
+      activeNeighbour = null;
 
       document.getElementById('stats').style.display = 'none';
       document.getElementById('errorMsg').style.display = 'none';
       document.getElementById('emptyState').style.display = 'none';
       document.getElementById('freqGrid').style.display = 'none';
       document.getElementById('kwicTable').style.display = 'none';
+      document.getElementById('filterActiveBar').style.display = 'none';
       document.getElementById('kwicBody').innerHTML = '';
       document.getElementById('spinner').style.display = 'block';
 
@@ -349,6 +458,9 @@
           return;
         }
 
+        allResults = data.results;
+        currentWord = data.word;
+
         // Stats
         document.getElementById('statWord').textContent = data.word;
         document.getElementById('statTotal').textContent = data.total.toLocaleString();
@@ -356,32 +468,17 @@
         document.getElementById('stats').style.display = 'block';
 
         // Frequency tables
-        document.getElementById('leftFreq').innerHTML = data.left_freq
-          .map(([w, c]) => `<div class="freq-row"><span class="freq-word">${escapeHtml(w)}</span><span class="freq-count">${c}x</span></div>`)
-          .join('');
-        document.getElementById('rightFreq').innerHTML = data.right_freq
-          .map(([w, c]) => `<div class="freq-row"><span class="freq-word">${escapeHtml(w)}</span><span class="freq-count">${c}x</span></div>`)
-          .join('');
+        const leftFreqEl = document.getElementById('leftFreq');
+        leftFreqEl.innerHTML = '';
+        buildFreqRows(data.left_freq, 'left').forEach(el => leftFreqEl.appendChild(el));
+
+        const rightFreqEl = document.getElementById('rightFreq');
+        rightFreqEl.innerHTML = '';
+        buildFreqRows(data.right_freq, 'right').forEach(el => rightFreqEl.appendChild(el));
+
         document.getElementById('freqGrid').style.display = 'grid';
 
-        // KWIC rows
-        const tbody = document.getElementById('kwicBody');
-        for (const v of data.results) {
-          const placeClass = v.place ? v.place.toLowerCase() : '';
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td class="col-left">${escapeHtml(v.left)}</td>
-            <td class="col-word">${escapeHtml(data.word)}</td>
-            <td class="col-right">${escapeHtml(v.right)}</td>
-            <td class="col-ref">
-              <span class="ref-loc">${v.surah}:${v.ayah}</span>
-              <span class="ref-name">${v.surah_name} &nbsp; ${v.surah_name_arabic}</span>
-              ${v.place ? `<span class="place-badge ${placeClass}">${v.place}</span>` : ''}
-            </td>
-          `;
-          tbody.appendChild(tr);
-        }
-        document.getElementById('kwicTable').style.display = 'table';
+        renderKwic(allResults);
 
       } catch (err) {
         document.getElementById('spinner').style.display = 'none';
