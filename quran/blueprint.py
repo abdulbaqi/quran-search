@@ -1,3 +1,4 @@
+import csv
 from flask import Blueprint, render_template, request, jsonify
 from pathlib import Path
 
@@ -11,6 +12,7 @@ quran_bp = Blueprint(
 BASE = Path(__file__).parent
 CLEAN_FILE = BASE.parent / "quran-simple-clean.txt"
 DISPLAY_FILE = BASE / "quran-simple.txt"
+TOC_FILE = BASE.parent / "quran-toc.csv"
 
 
 def _parse(path: Path) -> dict[tuple[int, int], str]:
@@ -28,16 +30,29 @@ def _parse(path: Path) -> dict[tuple[int, int], str]:
     return verses
 
 
+def _load_toc(path: Path) -> dict[int, str]:
+    """Return {surah_number: 'Meccan'|'Medinan'}."""
+    toc = {}
+    with open(path, encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            toc[int(row["No."])] = row["Place"]
+    return toc
+
+
 _clean = _parse(CLEAN_FILE)
 _display = _parse(DISPLAY_FILE)
+_toc = _load_toc(TOC_FILE)
 
 
-def _search(word: str) -> dict:
+def _search(word: str, place: str = "") -> dict:
     word = word.strip()
     if not word:
         return {"word": word, "total": 0, "verse_count": 0, "results": []}
+    place = place.strip().capitalize()  # "Meccan" | "Medinan" | ""
     total, results = 0, []
     for (surah, ayah), clean_text in _clean.items():
+        if place and _toc.get(surah) != place:
+            continue
         count = clean_text.count(word)
         if count:
             total += count
@@ -58,4 +73,5 @@ def index():
 @quran_bp.route("/search")
 def search():
     word = request.args.get("word", "").strip()
-    return jsonify(_search(word))
+    place = request.args.get("place", "").strip()
+    return jsonify(_search(word, place))

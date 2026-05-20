@@ -163,6 +163,32 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    .filter-bar {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      direction: ltr;
+    }
+
+    .filter-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.9rem;
+      color: #9ab;
+      cursor: pointer;
+    }
+
+    .filter-label input[type="radio"] {
+      accent-color: #d4af37;
+      cursor: pointer;
+    }
+
+    .filter-label:has(input:checked) {
+      color: #d4af37;
+    }
+
     .error-msg {
       display: none;
       background: rgba(220,50,50,0.12);
@@ -188,10 +214,23 @@
       <button onclick="doSearch()">Search</button>
     </div>
 
+    <div class="filter-bar">
+      <label class="filter-label">
+        <input type="radio" name="place" value="" checked onchange="doSearch()" /> All Surahs
+      </label>
+      <label class="filter-label">
+        <input type="radio" name="place" value="Meccan" onchange="doSearch()" /> Meccan Only
+      </label>
+      <label class="filter-label">
+        <input type="radio" name="place" value="Medinan" onchange="doSearch()" /> Medinan Only
+      </label>
+    </div>
+
     <div class="stats" id="stats">
       Found <span id="statTotal">0</span> occurrence(s) of
       &ldquo;<span id="statWord"></span>&rdquo; across
       <span id="statVerses">0</span> verse(s)
+      <span id="statScope"></span>
     </div>
 
     <div class="error-msg" id="errorMsg">Something went wrong. Please try again.</div>
@@ -248,6 +287,8 @@
       const word = input.value.trim();
       if (!word) return;
 
+      const place = document.querySelector('input[name="place"]:checked').value;
+
       document.getElementById('stats').style.display = 'none';
       document.getElementById('errorMsg').style.display = 'none';
       document.getElementById('emptyState').style.display = 'none';
@@ -255,7 +296,9 @@
       document.getElementById('spinner').style.display = 'block';
 
       try {
-        const res = await fetch(`/quran/search?word=${encodeURIComponent(word)}`);
+        const params = new URLSearchParams({ word });
+        if (place) params.set('place', place);
+        const res = await fetch(`/quran/search?${params}`);
         if (!res.ok) throw new Error('Network error');
         const data = await res.json();
 
@@ -269,6 +312,7 @@
         document.getElementById('statWord').textContent = data.word;
         document.getElementById('statTotal').textContent = data.total.toLocaleString();
         document.getElementById('statVerses').textContent = data.verse_count.toLocaleString();
+        document.getElementById('statScope').textContent = place ? `— ${place} surahs only` : '';
         document.getElementById('stats').style.display = 'block';
 
         const container = document.getElementById('results');
