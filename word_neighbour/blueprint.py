@@ -66,20 +66,22 @@ def _search(word: str, place: str = "") -> dict:
         for i, w in enumerate(words):
             if w != word:
                 continue
-            left = words[i - 1] if i > 0 else None
-            right = words[i + 1] if i < len(words) - 1 else None
-            if left:
-                left_counter[left] += 1
-            if right:
-                right_counter[right] += 1
+            left_word = words[i - 1] if i > 0 else None
+            right_word = words[i + 1] if i < len(words) - 1 else None
+            if left_word:
+                left_counter[left_word] += 1
+            if right_word:
+                right_counter[right_word] += 1
+            left_ctx = " ".join(words[max(0, i - 5):i])
+            right_ctx = " ".join(words[i + 1:i + 6])
             results.append({
                 "surah": surah,
                 "ayah": ayah,
                 "surah_name": meta.get("name", ""),
                 "surah_name_arabic": meta.get("name_arabic", ""),
                 "place": meta.get("place", ""),
-                "left": left,
-                "right": right,
+                "left": left_ctx,
+                "right": right_ctx,
                 "text": _display.get((surah, ayah), clean_text),
             })
 
