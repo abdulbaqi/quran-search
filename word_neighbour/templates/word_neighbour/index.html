@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Word & Its Neighbour</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #e0e0e0;
+      padding: 2rem 1rem;
+    }
+
+    .container { max-width: 960px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 2.5rem; }
+
+    header h1 {
+      font-size: 2.4rem;
+      color: #d4af37;
+      letter-spacing: 2px;
+      text-shadow: 0 0 20px rgba(212,175,55,0.4);
+    }
+
+    header p { margin-top: 0.4rem; color: #9ab; font-size: 0.95rem; direction: ltr; }
+
+    .search-box {
+      display: flex;
+      gap: 0.6rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+
+    .search-box input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 1.4rem;
+      color: #fff;
+      direction: rtl;
+      font-family: inherit;
+    }
+
+    .search-box input::placeholder { color: #556; }
+
+    .search-box button {
+      background: #d4af37;
+      color: #1a1a2e;
+      border: none;
+      border-radius: 8px;
+      padding: 0.55rem 1.4rem;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      direction: ltr;
+      white-space: nowrap;
+    }
+
+    .search-box button:hover { background: #e8c84a; }
+    .search-box button:active { transform: scale(0.97); }
+
+    .filter-bar {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      direction: ltr;
+    }
+
+    .filter-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.9rem;
+      color: #9ab;
+      cursor: pointer;
+    }
+
+    .filter-label input[type="radio"] { accent-color: #d4af37; cursor: pointer; }
+    .filter-label:has(input:checked) { color: #d4af37; }
+
+    .stats {
+      display: none;
+      background: rgba(212,175,55,0.1);
+      border: 1px solid rgba(212,175,55,0.25);
+      border-radius: 10px;
+      padding: 0.8rem 1.2rem;
+      margin-bottom: 1.2rem;
+      direction: ltr;
+      text-align: center;
+      font-size: 0.95rem;
+      color: #d4af37;
+    }
+
+    .stats span { font-weight: 700; font-size: 1.1rem; }
+
+    /* Frequency tables */
+    .freq-grid {
+      display: none;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .freq-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+    }
+
+    .freq-box h3 {
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #7a9bb5;
+      margin-bottom: 0.8rem;
+      direction: ltr;
+    }
+
+    .freq-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.3rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      direction: rtl;
+    }
+
+    .freq-row:last-child { border-bottom: none; }
+
+    .freq-word { font-size: 1.05rem; color: #f0f0f0; }
+
+    .freq-count {
+      font-size: 0.75rem;
+      color: #d4af37;
+      font-weight: 700;
+      direction: ltr;
+    }
+
+    /* KWIC concordance */
+    .kwic-table {
+      display: none;
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .kwic-table th {
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #7a9bb5;
+      padding: 0.5rem 0.75rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      direction: ltr;
+    }
+
+    .kwic-table td {
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      vertical-align: middle;
+    }
+
+    .kwic-table tr:last-child td { border-bottom: none; }
+
+    .kwic-table tr:hover td { background: rgba(255,255,255,0.04); }
+
+    .col-left  { text-align: left;  direction: rtl; font-size: 1.1rem; color: #c8c8c8; width: 28%; }
+    .col-word  { text-align: center; font-size: 1.15rem; font-weight: 700; color: #ffe680;
+                 background: rgba(212,175,55,0.12); border-radius: 4px; white-space: nowrap; }
+    .col-right { text-align: right; direction: rtl; font-size: 1.1rem; color: #c8c8c8; width: 28%; }
+
+    .col-ref {
+      text-align: left;
+      direction: ltr;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      width: 22%;
+    }
+
+    .ref-loc   { color: #d4af37; font-weight: 600; display: block; }
+    .ref-name  { color: #9ab; display: block; margin-top: 0.1rem; }
+
+    .place-badge {
+      display: inline-block;
+      font-size: 0.6rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      border-radius: 3px;
+      padding: 0.1rem 0.4rem;
+      margin-top: 0.2rem;
+    }
+
+    .place-badge.meccan  { background: rgba(232,135,58,0.18); color: #e8873a; }
+    .place-badge.medinan { background: rgba(76,175,143,0.18);  color: #4caf8f; }
+
+    .empty-state {
+      display: none;
+      text-align: center;
+      padding: 3rem;
+      color: #556;
+      direction: ltr;
+    }
+
+    .empty-state .icon { font-size: 3rem; margin-bottom: 0.5rem; }
+
+    .spinner {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+      direction: ltr;
+      color: #9ab;
+    }
+
+    .spinner::after {
+      content: '';
+      display: inline-block;
+      width: 28px; height: 28px;
+      border: 3px solid rgba(212,175,55,0.2);
+      border-top-color: #d4af37;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      display: none;
+      background: rgba(220,50,50,0.12);
+      border: 1px solid rgba(220,50,50,0.3);
+      border-radius: 8px;
+      padding: 0.8rem 1.2rem;
+      color: #f88;
+      direction: ltr;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/" style="display:inline-block;margin-bottom:1rem;color:#9ab;font-size:0.85rem;text-decoration:none;direction:ltr;">&#8592; Back to Home</a>
+      <h1>&#x202B;الكلمة وجارتها&#x202C;</h1>
+      <p>Word &amp; Its Neighbour &mdash; Quranic Concordance</p>
+    </header>
+
+    <div class="search-box">
+      <input id="searchInput" type="text" placeholder="أدخل كلمة للبحث..." autocomplete="off" />
+      <button onclick="doSearch()">Search</button>
+    </div>
+
+    <div class="filter-bar">
+      <label class="filter-label">
+        <input type="radio" name="place" value="" checked onchange="doSearch()" /> All Surahs
+      </label>
+      <label class="filter-label">
+        <input type="radio" name="place" value="Meccan" onchange="doSearch()" /> Meccan Only
+      </label>
+      <label class="filter-label">
+        <input type="radio" name="place" value="Medinan" onchange="doSearch()" /> Medinan Only
+      </label>
+    </div>
+
+    <div class="stats" id="stats">
+      Found <span id="statTotal">0</span> occurrence(s) of
+      &ldquo;<span id="statWord"></span>&rdquo;
+      <span id="statScope"></span>
+    </div>
+
+    <div class="error-msg" id="errorMsg">Something went wrong. Please try again.</div>
+    <div class="spinner" id="spinner">Searching&hellip;</div>
+
+    <div class="freq-grid" id="freqGrid">
+      <div class="freq-box">
+        <h3>&#8592; Left Neighbours (word before)</h3>
+        <div id="leftFreq"></div>
+      </div>
+      <div class="freq-box">
+        <h3>Right Neighbours (word after) &#8594;</h3>
+        <div id="rightFreq"></div>
+      </div>
+    </div>
+
+    <div class="empty-state" id="emptyState">
+      <div class="icon">&#x1F50D;</div>
+      <div>No occurrences found for this word.</div>
+    </div>
+
+    <table class="kwic-table" id="kwicTable">
+      <thead>
+        <tr>
+          <th style="text-align:right;direction:rtl;">Before</th>
+          <th>Word</th>
+          <th style="text-align:left;direction:rtl;">After</th>
+          <th style="direction:ltr;">Reference</th>
+        </tr>
+      </thead>
+      <tbody id="kwicBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const input = document.getElementById('searchInput');
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+    function escapeHtml(str) {
+      if (!str) return '<span style="color:#334">—</span>';
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    async function doSearch() {
+      const word = input.value.trim();
+      if (!word) return;
+
+      const place = document.querySelector('input[name="place"]:checked').value;
+
+      document.getElementById('stats').style.display = 'none';
+      document.getElementById('errorMsg').style.display = 'none';
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('freqGrid').style.display = 'none';
+      document.getElementById('kwicTable').style.display = 'none';
+      document.getElementById('kwicBody').innerHTML = '';
+      document.getElementById('spinner').style.display = 'block';
+
+      try {
+        const params = new URLSearchParams({ word });
+        if (place) params.set('place', place);
+        const res = await fetch(`/word-neighbour/search?${params}`);
+        if (!res.ok) throw new Error('Network error');
+        const data = await res.json();
+
+        document.getElementById('spinner').style.display = 'none';
+
+        if (data.total === 0) {
+          document.getElementById('emptyState').style.display = 'block';
+          return;
+        }
+
+        // Stats
+        document.getElementById('statWord').textContent = data.word;
+        document.getElementById('statTotal').textContent = data.total.toLocaleString();
+        document.getElementById('statScope').textContent = place ? `— ${place} surahs only` : '';
+        document.getElementById('stats').style.display = 'block';
+
+        // Frequency tables
+        document.getElementById('leftFreq').innerHTML = data.left_freq
+          .map(([w, c]) => `<div class="freq-row"><span class="freq-word">${escapeHtml(w)}</span><span class="freq-count">${c}x</span></div>`)
+          .join('');
+        document.getElementById('rightFreq').innerHTML = data.right_freq
+          .map(([w, c]) => `<div class="freq-row"><span class="freq-word">${escapeHtml(w)}</span><span class="freq-count">${c}x</span></div>`)
+          .join('');
+        document.getElementById('freqGrid').style.display = 'grid';
+
+        // KWIC rows
+        const tbody = document.getElementById('kwicBody');
+        for (const v of data.results) {
+          const placeClass = v.place ? v.place.toLowerCase() : '';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="col-left">${escapeHtml(v.left)}</td>
+            <td class="col-word">${escapeHtml(data.word)}</td>
+            <td class="col-right">${escapeHtml(v.right)}</td>
+            <td class="col-ref">
+              <span class="ref-loc">${v.surah}:${v.ayah}</span>
+              <span class="ref-name">${v.surah_name} &nbsp; ${v.surah_name_arabic}</span>
+              ${v.place ? `<span class="place-badge ${placeClass}">${v.place}</span>` : ''}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        }
+        document.getElementById('kwicTable').style.display = 'table';
+
+      } catch (err) {
+        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('errorMsg').style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>

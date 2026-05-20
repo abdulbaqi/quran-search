@@ -1,9 +1,11 @@
 import os
 from flask import Flask, render_template
 from quran.blueprint import quran_bp
+from word_neighbour.blueprint import word_neighbour_bp
 
 app = Flask(__name__)
 app.register_blueprint(quran_bp)
+app.register_blueprint(word_neighbour_bp)
 
 
 @app.route("/")
