@@ -293,10 +293,10 @@
   <div class="verses">
     {% for v in verses %}
     {% if not v.is_bismillah %}
-    <div class="verse" id="v{{ v.ayah }}">
+    <div class="verse" id="v{{ v.display_ayah }}">
       <div class="verse-body">
         <div class="arabic-text">{{ v.arabic }}</div>
-        <div class="verse-num">{{ v.ayah }}</div>
+        <div class="verse-num">{{ v.display_ayah }}</div>
       </div>
       {% if v.trans_en %}<div class="trans-en">{{ v.trans_en }}</div>{% endif %}
       {% if v.trans_bn %}<div class="trans-bn">{{ v.trans_bn }}</div>{% endif %}

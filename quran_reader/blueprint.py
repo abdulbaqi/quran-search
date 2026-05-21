@@ -25,6 +25,7 @@ def _surah_verses(surah: int) -> list[dict]:
         trans_ayah = ayah - offset
         entry = {
             "ayah": ayah,
+            "display_ayah": trans_ayah if trans_ayah >= 1 else ayah,
             "arabic": arabic,
             "is_bismillah": offset == 1 and ayah == 1,
             "trans_en": trans_en.get((surah, trans_ayah), "") if trans_ayah >= 1 else "",
