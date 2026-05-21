@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quran Search</title>
   <style>
+    @font-face {
+      font-family: 'KFGQPC Hafs Uthmanic';
+      src: url('https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/fonts/hafs-uthmanic-v14-full.woff2') format('woff2'),
+           url('https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/fonts/hafs-uthmanic-v14-full.woff') format('woff'),
+           url('https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/fonts/hafs-uthmanic-v14-full.ttf') format('truetype');
+      font-display: swap;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -130,6 +138,7 @@
     }
 
     .verse-ref .surah-name-ar {
+      font-family: 'KFGQPC Hafs Uthmanic', serif;
       font-size: 0.9rem;
       color: #c8c8c8;
     }
@@ -147,6 +156,7 @@
     .place-badge.medinan { background: rgba(76,175,143,0.18); color: #4caf8f; }
 
     .verse-text {
+      font-family: 'KFGQPC Hafs Uthmanic', serif;
       font-size: 1.35rem;
       line-height: 2.1;
       color: #f0f0f0;

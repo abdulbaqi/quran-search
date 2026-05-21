@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Word & Its Neighbour</title>
   <style>
+    @font-face {
+      font-family: 'KFGQPC Hafs Uthmanic';
+      src: url('https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/fonts/hafs-uthmanic-v14-full.woff2') format('woff2'),
+           url('https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/fonts/hafs-uthmanic-v14-full.woff') format('woff'),
+           url('https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/fonts/hafs-uthmanic-v14-full.ttf') format('truetype');
+      font-display: swap;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -145,6 +153,7 @@
     .freq-row:last-child { border-bottom: none; }
 
     .freq-word {
+      font-family: 'KFGQPC Hafs Uthmanic', serif;
       font-size: 1.05rem;
       color: #f0f0f0;
       text-decoration: underline dotted rgba(212,175,55,0.5);
@@ -214,10 +223,10 @@
 
     .kwic-table tr:hover td { background: rgba(255,255,255,0.04); }
 
-    .col-left  { text-align: left;  direction: rtl; font-size: 1.05rem; color: #c8c8c8; width: 35%; line-height: 1.8; }
-    .col-word  { text-align: center; font-size: 1.15rem; font-weight: 700; color: #ffe680;
+    .col-left  { text-align: left;  direction: rtl; font-family: 'KFGQPC Hafs Uthmanic', serif; font-size: 1.05rem; color: #c8c8c8; width: 35%; line-height: 1.8; }
+    .col-word  { text-align: center; font-family: 'KFGQPC Hafs Uthmanic', serif; font-size: 1.15rem; font-weight: 700; color: #ffe680;
                  background: rgba(212,175,55,0.12); border-radius: 4px; white-space: nowrap; width: 8%; }
-    .col-right { text-align: right; direction: rtl; font-size: 1.05rem; color: #c8c8c8; width: 35%; line-height: 1.8; }
+    .col-right { text-align: right; direction: rtl; font-family: 'KFGQPC Hafs Uthmanic', serif; font-size: 1.05rem; color: #c8c8c8; width: 35%; line-height: 1.8; }
 
     .col-ref {
       text-align: left;
