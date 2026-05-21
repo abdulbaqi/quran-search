@@ -143,16 +143,6 @@
       margin: 1rem auto 0;
     }
 
-    /* ── Bismillah header (for surahs 2–114 except 9) ── */
-    .bismillah-header {
-      font-family: 'KFGQPC Hafs Uthmanic', serif;
-      font-size: 1.8rem;
-      color: #c8a830;
-      text-align: center;
-      padding: 0.5rem 1.5rem 1.5rem;
-      letter-spacing: 0.05em;
-    }
-
     /* ── Verses ── */
     .verses {
       max-width: 860px;
@@ -284,24 +274,17 @@
     <div class="divider"></div>
   </div>
 
-  <!-- Bismillah decorative header for all surahs except 1 and 9 -->
-  {% if surah not in (1, 9) %}
-  <div class="bismillah-header">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِيمِ</div>
-  {% endif %}
-
   <!-- Verses -->
   <div class="verses">
     {% for v in verses %}
-    {% if not v.is_bismillah %}
-    <div class="verse" id="v{{ v.display_ayah }}">
+    <div class="verse" id="v{{ v.ayah }}">
       <div class="verse-body">
         <div class="arabic-text">{{ v.arabic }}</div>
-        <div class="verse-num">{{ v.display_ayah }}</div>
+        <div class="verse-num">{{ v.ayah }}</div>
       </div>
       {% if v.trans_en %}<div class="trans-en">{{ v.trans_en }}</div>{% endif %}
       {% if v.trans_bn %}<div class="trans-bn">{{ v.trans_bn }}</div>{% endif %}
     </div>
-    {% endif %}
     {% endfor %}
   </div>
 

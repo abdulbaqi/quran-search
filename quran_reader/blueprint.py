@@ -8,31 +8,21 @@ reader_bp = Blueprint(
     url_prefix="/read",
 )
 
-# Surahs where Tanzil numbers the Bismillah as verse 1 but translations do not.
-# Excludes surah 1 (Bismillah IS the canonical verse 1 in all systems)
-# and surah 9 (no Bismillah).
-_BISMILLAH_SURAHS = set(range(2, 115)) - {9}
-
 
 def _surah_verses(surah: int) -> list[dict]:
     pairs = sorted(
         [(a, t) for (s, a), t in display.items() if s == surah],
         key=lambda x: x[0],
     )
-    offset = 1 if surah in _BISMILLAH_SURAHS else 0
-    result = []
-    for ayah, arabic in pairs:
-        trans_ayah = ayah - offset
-        entry = {
+    return [
+        {
             "ayah": ayah,
-            "display_ayah": trans_ayah if trans_ayah >= 1 else ayah,
             "arabic": arabic,
-            "is_bismillah": offset == 1 and ayah == 1,
-            "trans_en": trans_en.get((surah, trans_ayah), "") if trans_ayah >= 1 else "",
-            "trans_bn": trans_bn.get((surah, trans_ayah), "") if trans_ayah >= 1 else "",
+            "trans_en": trans_en.get((surah, ayah), ""),
+            "trans_bn": trans_bn.get((surah, ayah), ""),
         }
-        result.append(entry)
-    return result
+        for ayah, arabic in pairs
+    ]
 
 
 @reader_bp.route("/")
