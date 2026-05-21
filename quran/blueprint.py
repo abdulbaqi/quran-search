@@ -1,4 +1,5 @@
 import csv
+import json
 from flask import Blueprint, render_template, request, jsonify
 from pathlib import Path
 
@@ -13,6 +14,8 @@ BASE = Path(__file__).parent
 CLEAN_FILE = BASE.parent / "quran-simple-clean.txt"
 DISPLAY_FILE = BASE / "quran-simple.txt"
 TOC_FILE = BASE.parent / "quran-toc.csv"
+TRANS_EN_FILE = BASE / "eng-mustafakhattaba.json"
+TRANS_BN_FILE = BASE / "ben-abubakrzakaria.json"
 
 
 def _parse(path: Path) -> dict[tuple[int, int], str]:
@@ -43,16 +46,26 @@ def _load_toc(path: Path) -> dict[int, dict]:
     return toc
 
 
+def _load_translation(path: Path) -> dict[tuple[int, int], str]:
+    """Load a quran-api edition JSON into {(chapter, verse): text}."""
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    return {(item["chapter"], item["verse"]): item["text"]
+            for item in data.get("quran", [])}
+
+
 _clean = _parse(CLEAN_FILE)
 _display = _parse(DISPLAY_FILE)
 _toc = _load_toc(TOC_FILE)
+_trans_en = _load_translation(TRANS_EN_FILE) if TRANS_EN_FILE.exists() else {}
+_trans_bn = _load_translation(TRANS_BN_FILE) if TRANS_BN_FILE.exists() else {}
 
 
-def _search(word: str, place: str = "") -> dict:
+def _search(word: str, place: str = "", trans: frozenset = frozenset()) -> dict:
     word = word.strip()
     if not word:
         return {"word": word, "total": 0, "verse_count": 0, "results": []}
-    place = place.strip().capitalize()  # "Meccan" | "Medinan" | ""
+    place = place.strip().capitalize()
     total, results = 0, []
     for (surah, ayah), clean_text in _clean.items():
         meta = _toc.get(surah, {})
@@ -61,7 +74,7 @@ def _search(word: str, place: str = "") -> dict:
         count = clean_text.count(word)
         if count:
             total += count
-            results.append({
+            entry = {
                 "surah": surah,
                 "ayah": ayah,
                 "surah_name": meta.get("name", ""),
@@ -69,7 +82,12 @@ def _search(word: str, place: str = "") -> dict:
                 "place": meta.get("place", ""),
                 "text": _display.get((surah, ayah), clean_text),
                 "count": count,
-            })
+            }
+            if "en" in trans:
+                entry["trans_en"] = _trans_en.get((surah, ayah), "")
+            if "bn" in trans:
+                entry["trans_bn"] = _trans_bn.get((surah, ayah), "")
+            results.append(entry)
     return {"word": word, "total": total, "verse_count": len(results), "results": results}
 
 
@@ -82,4 +100,5 @@ def index():
 def search():
     word = request.args.get("word", "").strip()
     place = request.args.get("place", "").strip()
-    return jsonify(_search(word, place))
+    trans = frozenset(request.args.getlist("trans"))
+    return jsonify(_search(word, place, trans))

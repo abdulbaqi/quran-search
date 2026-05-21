@@ -228,6 +228,47 @@
       color: #d4af37;
     }
 
+    .trans-bar {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      direction: ltr;
+      flex-wrap: wrap;
+    }
+
+    .trans-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      color: #9ab;
+      cursor: pointer;
+    }
+
+    .trans-label input[type="checkbox"] { accent-color: #d4af37; cursor: pointer; }
+    .trans-label:has(input:checked) { color: #d4af37; }
+
+    .trans-en {
+      margin-top: 0.55rem;
+      padding-top: 0.45rem;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      font-size: 0.92rem;
+      color: #b0c8d8;
+      direction: ltr;
+      line-height: 1.7;
+    }
+
+    .trans-bn {
+      margin-top: 0.4rem;
+      padding-top: 0.35rem;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      font-size: 0.92rem;
+      color: #b8c8b0;
+      direction: ltr;
+      line-height: 1.7;
+    }
+
     .error-msg {
       display: none;
       background: rgba(220,50,50,0.12);
@@ -262,6 +303,15 @@
       </label>
       <label class="filter-label">
         <input type="radio" name="place" value="Medinan" onchange="doSearch()" /> Medinan Only
+      </label>
+    </div>
+
+    <div class="trans-bar">
+      <label class="trans-label">
+        <input type="checkbox" id="transEn" onchange="doSearch()" /> English &mdash; Mustafa Khattab (The Clear Quran)
+      </label>
+      <label class="trans-label">
+        <input type="checkbox" id="transBn" onchange="doSearch()" /> বাংলা &mdash; আবু বকর যাকারিয়া
       </label>
     </div>
 
@@ -327,6 +377,8 @@
       if (!word) return;
 
       const place = document.querySelector('input[name="place"]:checked').value;
+      const wantEn = document.getElementById('transEn').checked;
+      const wantBn = document.getElementById('transBn').checked;
 
       document.getElementById('stats').style.display = 'none';
       document.getElementById('errorMsg').style.display = 'none';
@@ -337,6 +389,8 @@
       try {
         const params = new URLSearchParams({ word });
         if (place) params.set('place', place);
+        if (wantEn) params.append('trans', 'en');
+        if (wantBn) params.append('trans', 'bn');
         const res = await fetch(`/quran/search?${params}`);
         if (!res.ok) throw new Error('Network error');
         const data = await res.json();
@@ -367,6 +421,8 @@
               ${v.place ? `<span class="place-badge ${placeClass}">${v.place}</span>` : ''}
             </div>
             <div class="verse-text">${highlight(v.text, word)}</div>
+            ${v.trans_en ? `<div class="trans-en">${escapeHtml(v.trans_en)}</div>` : ''}
+            ${v.trans_bn ? `<div class="trans-bn">${escapeHtml(v.trans_bn)}</div>` : ''}
           `;
           container.appendChild(card);
         }
