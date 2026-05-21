@@ -20,9 +20,11 @@ for path, url in _FILES.items():
         urllib.request.urlretrieve(url, path)
 
 from quran.blueprint import quran_bp
+from quran_reader.blueprint import reader_bp
 from word_neighbour.blueprint import word_neighbour_bp
 
 app = Flask(__name__)
+app.register_blueprint(reader_bp)
 app.register_blueprint(quran_bp)
 app.register_blueprint(word_neighbour_bp)
 

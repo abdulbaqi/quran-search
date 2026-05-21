@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ meta.name_arabic }} — القرآن الكريم</title>
+  <style>
+    @font-face {
+      font-family: 'KFGQPC Hafs Uthmanic';
+      src: url('https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/fonts/hafs-uthmanic-v14-full.woff2') format('woff2'),
+           url('https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/fonts/hafs-uthmanic-v14-full.woff') format('woff'),
+           url('https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/fonts/hafs-uthmanic-v14-full.ttf') format('truetype');
+      font-display: swap;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #e0e0e0;
+    }
+
+    /* ── Sticky nav bar ── */
+    .nav-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15, 25, 50, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(212,175,55,0.2);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      direction: ltr;
+      flex-wrap: wrap;
+    }
+
+    .nav-home {
+      color: #9ab;
+      font-size: 0.8rem;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .nav-home:hover { color: #d4af37; }
+
+    .surah-select {
+      flex: 1;
+      min-width: 200px;
+      max-width: 340px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 8px;
+      color: #f0f0f0;
+      font-size: 0.9rem;
+      padding: 0.45rem 0.75rem;
+      cursor: pointer;
+      outline: none;
+    }
+    .surah-select option { background: #16213e; }
+
+    .nav-arrows {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .nav-btn {
+      background: rgba(212,175,55,0.12);
+      border: 1px solid rgba(212,175,55,0.3);
+      color: #d4af37;
+      border-radius: 6px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .nav-btn:hover { background: rgba(212,175,55,0.25); }
+    .nav-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+    .trans-toggles {
+      display: flex;
+      gap: 1.2rem;
+      align-items: center;
+      margin-right: auto;
+    }
+
+    .trans-label {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.8rem;
+      color: #9ab;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .trans-label input { accent-color: #d4af37; cursor: pointer; }
+    .trans-label:has(input:checked) { color: #d4af37; }
+
+    /* ── Surah header ── */
+    .surah-header {
+      text-align: center;
+      padding: 2.5rem 1.5rem 1.5rem;
+    }
+
+    .surah-header .surah-name-ar {
+      font-family: 'KFGQPC Hafs Uthmanic', serif;
+      font-size: 2.4rem;
+      color: #d4af37;
+      text-shadow: 0 0 20px rgba(212,175,55,0.35);
+      line-height: 1.4;
+    }
+
+    .surah-header .surah-meta {
+      direction: ltr;
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      color: #9ab;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .place-badge {
+      font-size: 0.65rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      border-radius: 4px;
+      padding: 0.15rem 0.45rem;
+    }
+    .place-badge.meccan  { background: rgba(232,135,58,0.18);  color: #e8873a; }
+    .place-badge.medinan { background: rgba(76,175,143,0.18); color: #4caf8f; }
+
+    .divider {
+      width: 60px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, #d4af37, transparent);
+      margin: 1rem auto 0;
+    }
+
+    /* ── Bismillah header (for surahs 2–114 except 9) ── */
+    .bismillah-header {
+      font-family: 'KFGQPC Hafs Uthmanic', serif;
+      font-size: 1.8rem;
+      color: #c8a830;
+      text-align: center;
+      padding: 0.5rem 1.5rem 1.5rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Verses ── */
+    .verses {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 1.5rem 4rem;
+    }
+
+    .verse {
+      padding: 1.2rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .verse:last-child { border-bottom: none; }
+
+    .verse-body {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      direction: rtl;
+    }
+
+    .arabic-text {
+      font-family: 'KFGQPC Hafs Uthmanic', serif;
+      font-size: 1.55rem;
+      line-height: 2.1;
+      color: #f0f0f0;
+      flex: 1;
+      direction: rtl;
+    }
+
+    .verse-num {
+      direction: ltr;
+      flex-shrink: 0;
+      width: 2rem;
+      height: 2rem;
+      border: 1px solid rgba(212,175,55,0.35);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: #d4af37;
+      margin-top: 0.5rem;
+    }
+
+    .trans-en,
+    .trans-bn {
+      direction: ltr;
+      font-size: 0.92rem;
+      line-height: 1.75;
+      margin-top: 0.5rem;
+      padding-top: 0.4rem;
+    }
+
+    .trans-en { color: #8bb8d0; border-top: 1px solid rgba(139,184,208,0.15); }
+    .trans-bn { color: #96c496; border-top: 1px solid rgba(150,196,150,0.15); }
+
+    /* hidden state — toggled by JS */
+    body.hide-en .trans-en { display: none; }
+    body.hide-bn .trans-bn { display: none; }
+
+    /* ── Bottom navigation ── */
+    .bottom-nav {
+      direction: ltr;
+      display: flex;
+      justify-content: space-between;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem 3rem;
+    }
+
+    /* ── Scroll-to highlight ── */
+    .verse.highlight .arabic-text {
+      color: #ffe680;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky nav -->
+  <div class="nav-bar">
+    <a class="nav-home" href="/">&#8592; Home</a>
+
+    <select class="surah-select" onchange="goSurah(this.value)">
+      {% for n, s in toc.items() %}
+      <option value="{{ n }}" {% if n == surah %}selected{% endif %}>
+        {{ n }}. {{ s.name }} — {{ s.name_arabic }}
+      </option>
+      {% endfor %}
+    </select>
+
+    <div class="nav-arrows">
+      {% if surah > 1 %}
+      <a class="nav-btn" href="/read/{{ surah - 1 }}">&#8592; Prev</a>
+      {% else %}
+      <span class="nav-btn disabled">&#8592; Prev</span>
+      {% endif %}
+      {% if surah < 114 %}
+      <a class="nav-btn" href="/read/{{ surah + 1 }}">Next &#8594;</a>
+      {% else %}
+      <span class="nav-btn disabled">Next &#8594;</span>
+      {% endif %}
+    </div>
+
+    <div class="trans-toggles">
+      <label class="trans-label">
+        <input type="checkbox" id="chkEn" onchange="toggleTrans('en', this.checked)" />
+        English
+      </label>
+      <label class="trans-label">
+        <input type="checkbox" id="chkBn" onchange="toggleTrans('bn', this.checked)" />
+        বাংলা
+      </label>
+    </div>
+  </div>
+
+  <!-- Surah header -->
+  <div class="surah-header">
+    <div class="surah-name-ar">{{ meta.name_arabic }}</div>
+    <div class="surah-meta">
+      <span>Surah {{ surah }}</span>
+      <span>&bull;</span>
+      <span>{{ meta.name }}</span>
+      <span>&bull;</span>
+      <span>{{ verses | length }} verses</span>
+      {% if meta.place %}
+      <span class="place-badge {{ meta.place | lower }}">{{ meta.place }}</span>
+      {% endif %}
+    </div>
+    <div class="divider"></div>
+  </div>
+
+  <!-- Bismillah decorative header for all surahs except 1 and 9 -->
+  {% if surah not in (1, 9) %}
+  <div class="bismillah-header">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِيمِ</div>
+  {% endif %}
+
+  <!-- Verses -->
+  <div class="verses">
+    {% for v in verses %}
+    {% if not v.is_bismillah %}
+    <div class="verse" id="v{{ v.ayah }}">
+      <div class="verse-body">
+        <div class="arabic-text">{{ v.arabic }}</div>
+        <div class="verse-num">{{ v.ayah }}</div>
+      </div>
+      {% if v.trans_en %}<div class="trans-en">{{ v.trans_en }}</div>{% endif %}
+      {% if v.trans_bn %}<div class="trans-bn">{{ v.trans_bn }}</div>{% endif %}
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- Bottom prev/next -->
+  <div class="bottom-nav">
+    {% if surah > 1 %}
+    <a class="nav-btn" href="/read/{{ surah - 1 }}">&#8592; Previous Surah</a>
+    {% else %}
+    <span></span>
+    {% endif %}
+    {% if surah < 114 %}
+    <a class="nav-btn" href="/read/{{ surah + 1 }}">Next Surah &#8594;</a>
+    {% else %}
+    <span></span>
+    {% endif %}
+  </div>
+
+  <script>
+    // Translation toggle — persist in localStorage
+    function toggleTrans(lang, on) {
+      document.body.classList.toggle('hide-' + lang, !on);
+      localStorage.setItem('trans_' + lang, on ? '1' : '0');
+    }
+
+    function initToggles() {
+      const en = localStorage.getItem('trans_en') !== '0';
+      const bn = localStorage.getItem('trans_bn') !== '0';
+      document.getElementById('chkEn').checked = en;
+      document.getElementById('chkBn').checked = bn;
+      document.body.classList.toggle('hide-en', !en);
+      document.body.classList.toggle('hide-bn', !bn);
+    }
+
+    // Surah selector navigation
+    function goSurah(n) {
+      window.location.href = '/read/' + n;
+    }
+
+    // Scroll to a specific verse if specified by the server
+    {% if scroll_to %}
+    function scrollToVerse() {
+      const el = document.getElementById('v{{ scroll_to }}');
+      if (el) {
+        el.classList.add('highlight');
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+    window.addEventListener('load', scrollToVerse);
+    {% endif %}
+
+    initToggles();
+  </script>
+</body>
+</html>

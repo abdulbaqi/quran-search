@@ -1,7 +1,6 @@
-import csv
-import json
 from flask import Blueprint, render_template, request, jsonify
-from pathlib import Path
+from quran.data import clean as _clean, display as _display, toc as _toc
+from quran.data import trans_en as _trans_en, trans_bn as _trans_bn
 
 quran_bp = Blueprint(
     "quran",
@@ -9,56 +8,6 @@ quran_bp = Blueprint(
     template_folder="templates",
     url_prefix="/quran",
 )
-
-BASE = Path(__file__).parent
-CLEAN_FILE = BASE.parent / "quran-simple-clean.txt"
-DISPLAY_FILE = BASE / "quran-simple.txt"
-TOC_FILE = BASE.parent / "quran-toc.csv"
-TRANS_EN_FILE = BASE / "eng-mustafakhattaba.json"
-TRANS_BN_FILE = BASE / "ben-abubakrzakaria.json"
-
-
-def _parse(path: Path) -> dict[tuple[int, int], str]:
-    verses = {}
-    with open(path, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            parts = line.split("|", 2)
-            if len(parts) != 3:
-                continue
-            surah, ayah, text = int(parts[0]), int(parts[1]), parts[2]
-            verses[(surah, ayah)] = text
-    return verses
-
-
-def _load_toc(path: Path) -> dict[int, dict]:
-    """Return {surah_number: {name, name_arabic, place}}."""
-    toc = {}
-    with open(path, encoding="utf-8") as f:
-        for row in csv.DictReader(f):
-            toc[int(row["No."])] = {
-                "name": row["Name"],
-                "name_arabic": row["Name Arabic"],
-                "place": row["Place"],
-            }
-    return toc
-
-
-def _load_translation(path: Path) -> dict[tuple[int, int], str]:
-    """Load a quran-api edition JSON into {(chapter, verse): text}."""
-    with open(path, encoding="utf-8") as f:
-        data = json.load(f)
-    return {(item["chapter"], item["verse"]): item["text"]
-            for item in data.get("quran", [])}
-
-
-_clean = _parse(CLEAN_FILE)
-_display = _parse(DISPLAY_FILE)
-_toc = _load_toc(TOC_FILE)
-_trans_en = _load_translation(TRANS_EN_FILE) if TRANS_EN_FILE.exists() else {}
-_trans_bn = _load_translation(TRANS_BN_FILE) if TRANS_BN_FILE.exists() else {}
 
 
 def _search(word: str, place: str = "", trans: frozenset = frozenset()) -> dict:
