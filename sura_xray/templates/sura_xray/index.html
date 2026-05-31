@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sura X-ray</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #e0e0e0;
+    }
+
+    header {
+      text-align: center;
+      padding: 3rem 1rem 2rem;
+    }
+
+    header h1 {
+      font-size: 2.4rem;
+      color: #d4af37;
+      letter-spacing: 3px;
+      text-shadow: 0 0 30px rgba(212,175,55,0.35);
+    }
+
+    header p {
+      margin-top: 0.5rem;
+      color: #7a9bb5;
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+    }
+
+    .divider {
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(to right, transparent, #d4af37, transparent);
+      margin: 1.2rem auto 0;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin: 1rem 1.5rem;
+      color: #7a9bb5;
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+    }
+    .back-link:hover { color: #d4af37; }
+
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 4rem;
+    }
+
+    .selector-bar {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    select {
+      flex: 1;
+      min-width: 220px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: #e0e0e0;
+      padding: 0.65rem 1rem;
+      font-size: 0.95rem;
+      cursor: pointer;
+      appearance: none;
+    }
+    select option { background: #1a1a2e; }
+    select:focus { outline: none; border-color: #d4af37; }
+
+    button {
+      background: #d4af37;
+      color: #1a1a2e;
+      border: none;
+      border-radius: 8px;
+      padding: 0.65rem 1.8rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+    button:hover { background: #e5c84a; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .spinner {
+      display: none;
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(212,175,55,0.2);
+      border-top-color: #d4af37;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 2rem auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      display: none;
+      color: #e06c75;
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+    }
+
+    /* Section panels */
+    .results { display: none; }
+
+    .panel {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 14px;
+      padding: 1.8rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .panel-title {
+      font-size: 0.72rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #d4af37;
+      margin-bottom: 1.2rem;
+      border-bottom: 1px solid rgba(212,175,55,0.2);
+      padding-bottom: 0.6rem;
+    }
+
+    .surah-heading {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .surah-heading .arabic { font-size: 2rem; color: #d4af37; direction: rtl; display: block; }
+    .surah-heading .latin { font-size: 1rem; color: #7a9bb5; margin-top: 0.3rem; }
+
+    /* Letter frequency bar chart */
+    .letter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.5rem;
+    }
+
+    .letter-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .letter-char {
+      font-size: 1.3rem;
+      color: #d4af37;
+      width: 1.8rem;
+      text-align: center;
+      direction: rtl;
+      font-weight: 700;
+    }
+
+    .bar-wrap {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border-radius: 4px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(to right, #d4af37, #e5c84a);
+      border-radius: 4px;
+    }
+
+    .letter-count {
+      font-size: 0.75rem;
+      color: #7a9bb5;
+      width: 2.5rem;
+      text-align: right;
+    }
+
+    /* Unique words chips */
+    .word-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      direction: rtl;
+    }
+
+    .chip {
+      background: rgba(212,175,55,0.12);
+      border: 1px solid rgba(212,175,55,0.25);
+      border-radius: 6px;
+      padding: 0.3rem 0.7rem;
+      font-size: 1rem;
+      color: #d4af37;
+      cursor: default;
+    }
+
+    .chip-count {
+      font-size: 0.75rem;
+      color: #7a9bb5;
+      margin-top: 0.5rem;
+    }
+
+    /* Repeated words table */
+    .word-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .word-table th {
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #7a9bb5;
+      text-align: left;
+      padding: 0.5rem 0.8rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .word-table th.rtl-col { text-align: right; }
+    .word-table td {
+      padding: 0.45rem 0.8rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.95rem;
+    }
+    .word-table td.arabic-cell {
+      direction: rtl;
+      font-size: 1.1rem;
+      color: #e0e0e0;
+      text-align: right;
+    }
+    .word-table td.count-cell {
+      color: #d4af37;
+      font-weight: 700;
+    }
+    .word-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+    /* Verse extremes */
+    .extremes-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+    }
+    @media (max-width: 600px) { .extremes-grid { grid-template-columns: 1fr; } }
+
+    .extreme-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 10px;
+      padding: 1.2rem;
+    }
+
+    .extreme-label {
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #7a9bb5;
+      margin-bottom: 0.5rem;
+    }
+
+    .extreme-ref {
+      font-size: 0.8rem;
+      color: #d4af37;
+      margin-bottom: 0.6rem;
+    }
+
+    .extreme-text {
+      direction: rtl;
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: #e0e0e0;
+    }
+
+    .extreme-wc {
+      margin-top: 0.6rem;
+      font-size: 0.78rem;
+      color: #7a9bb5;
+    }
+
+    .empty-note {
+      color: #7a9bb5;
+      font-size: 0.9rem;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <a class="back-link" href="/">&#8592; Portal</a>
+
+  <header>
+    <h1>Sura X-ray</h1>
+    <p>Linguistic fingerprint of any surah</p>
+    <div class="divider"></div>
+  </header>
+
+  <main>
+    <div class="selector-bar">
+      <select id="surahSelect">
+        {% for num in range(1, 115) %}
+        {% set s = toc[num] %}
+        <option value="{{ num }}">{{ num }}. {{ s.name }} — {{ s.name_arabic }}</option>
+        {% endfor %}
+      </select>
+      <button onclick="analyze()">Analyze</button>
+    </div>
+
+    <div class="spinner" id="spinner"></div>
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="results" id="results">
+
+      <div class="surah-heading">
+        <span class="arabic" id="rhArabic"></span>
+        <span class="latin" id="rhLatin"></span>
+      </div>
+
+      <!-- Letter Frequency -->
+      <div class="panel">
+        <div class="panel-title">Letter Frequency</div>
+        <div class="letter-grid" id="letterGrid"></div>
+      </div>
+
+      <!-- Quran-Unique Words -->
+      <div class="panel">
+        <div class="panel-title">Words Found Only in This Surah</div>
+        <div id="uniqueWordsWrap"></div>
+      </div>
+
+      <!-- Repeated Words -->
+      <div class="panel">
+        <div class="panel-title">Words Appearing More Than Once</div>
+        <div id="repeatedWordsWrap"></div>
+      </div>
+
+      <!-- Verse Extremes -->
+      <div class="panel">
+        <div class="panel-title">Longest &amp; Shortest Verse</div>
+        <div class="extremes-grid">
+          <div class="extreme-card">
+            <div class="extreme-label">Longest</div>
+            <div class="extreme-ref" id="longestRef"></div>
+            <div class="extreme-text" id="longestText"></div>
+            <div class="extreme-wc" id="longestWc"></div>
+          </div>
+          <div class="extreme-card">
+            <div class="extreme-label">Shortest</div>
+            <div class="extreme-ref" id="shortestRef"></div>
+            <div class="extreme-text" id="shortestText"></div>
+            <div class="extreme-wc" id="shortestWc"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /results -->
+  </main>
+
+  <script>
+    function esc(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    async function analyze() {
+      const surah = document.getElementById('surahSelect').value;
+      const spinner = document.getElementById('spinner');
+      const results = document.getElementById('results');
+      const errorMsg = document.getElementById('errorMsg');
+
+      results.style.display = 'none';
+      errorMsg.style.display = 'none';
+      spinner.style.display = 'block';
+
+      try {
+        const resp = await fetch(`/sura-xray/analyze?surah=${surah}`);
+        if (!resp.ok) throw new Error('Server error');
+        const d = await resp.json();
+        if (d.error) throw new Error(d.error);
+        render(d);
+        results.style.display = 'block';
+      } catch (e) {
+        errorMsg.textContent = 'Error: ' + e.message;
+        errorMsg.style.display = 'block';
+      } finally {
+        spinner.style.display = 'none';
+      }
+    }
+
+    function render(d) {
+      // Heading
+      document.getElementById('rhArabic').textContent = d.surah_name_arabic;
+      document.getElementById('rhLatin').textContent =
+        `Surah ${d.surah} · ${d.surah_name} · ${d.verse_count} verses`;
+
+      // Letter frequency
+      const maxCount = d.letter_freq.length ? d.letter_freq[0][1] : 1;
+      const lg = document.getElementById('letterGrid');
+      lg.innerHTML = d.letter_freq.map(([letter, count]) => {
+        const pct = Math.round((count / maxCount) * 100);
+        return `<div class="letter-row">
+          <span class="letter-char">${esc(letter)}</span>
+          <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
+          <span class="letter-count">${count}</span>
+        </div>`;
+      }).join('');
+
+      // Unique words
+      const uw = document.getElementById('uniqueWordsWrap');
+      if (!d.unique_words.length) {
+        uw.innerHTML = '<p class="empty-note">No words exclusive to this surah.</p>';
+      } else {
+        uw.innerHTML = `<p class="chip-count">${d.unique_words.length} unique word(s)</p>
+          <div class="word-chips" style="margin-top:0.8rem">
+            ${d.unique_words.map(w => `<span class="chip">${esc(w)}</span>`).join('')}
+          </div>`;
+      }
+
+      // Repeated words
+      const rw = document.getElementById('repeatedWordsWrap');
+      if (!d.repeated_words.length) {
+        rw.innerHTML = '<p class="empty-note">No word appears more than once.</p>';
+      } else {
+        rw.innerHTML = `<table class="word-table">
+          <thead><tr>
+            <th class="rtl-col">Word</th>
+            <th>Occurrences</th>
+          </tr></thead>
+          <tbody>
+            ${d.repeated_words.map(([w, c]) =>
+              `<tr><td class="arabic-cell">${esc(w)}</td><td class="count-cell">${c}</td></tr>`
+            ).join('')}
+          </tbody>
+        </table>`;
+      }
+
+      // Verse extremes
+      const fmt = (obj, prefix) => {
+        document.getElementById(prefix + 'Ref').textContent =
+          `${d.surah_name} : ${obj.ayah}`;
+        document.getElementById(prefix + 'Text').textContent = obj.text;
+        document.getElementById(prefix + 'Wc').textContent =
+          `${obj.word_count} word${obj.word_count !== 1 ? 's' : ''}`;
+      };
+      fmt(d.longest, 'longest');
+      fmt(d.shortest, 'shortest');
+    }
+  </script>
+
+</body>
+</html>
